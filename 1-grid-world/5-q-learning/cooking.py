@@ -4,6 +4,22 @@ from collections import defaultdict
 
 IN_SINK1 = 2
 
+def state_list_to_tuple(state_list):
+    state_tuple = tuple()
+    for state in state_list:
+        st = tuple()
+        for element in state:
+            if type(element) == list:
+                st += (tuple(element),)
+            else:
+                st += (element,)
+        state_tuple += (st,)
+    return state_tuple
+
+def action_num_to_tuple(action_num):
+    action_num
+    return action_tuple
+
 class KitchenEnv():
     def __init__(self, ingredient_list=[['apple1', [4, False, False]]], fixed_list=[['sink', [0, None]]], movable_list=[['plate1', [False]]], Nloc=10):
 
@@ -20,20 +36,23 @@ class KitchenEnv():
         ingredient_action_space.append('slice')
         fixed_action_space = ['turn_on', 'turn_off']
         movable_action_space = ['move_to_'+str(i) for i in range(Nloc)]
-        self.n_actions = len(ingredient_action_space)*len(ingredient_list) + len(fixed_action_space)*len(fixed_list) \
-                         + len(movable_action_space)*len(movable_list)
-        # self.action_space = {'apple1': self.ingredient_action_space,
-        #                      'plate1': self.movable_action_space,
-        #                      'sink': self.fixed_action_space}
-        # action_space = dict()
-        # for ingredient in ingredient_list:
-        #     action_space[ingredient] = self.ingredient_action_space
-        # for movable in movable_list:
-        #     action_space[movable] = self.movable_action_space
-        # for fixed in fixed_list:
-        #     action_space[fixed] = self.fixed_action_space
-        # self.action_space = action_space
-        # self.n_actions = len([action for action_list in self.action_space.values() for action in action_list])
+
+        # action: (class , object, action[int])
+        self.akey = dict()
+        idx = 0
+        for ingredient in ingredient_list:
+            for action in range(len(ingredient_action_space)):
+                self.akey[idx] = ('ingredient', ingredient[0], action)
+                idx += 1
+        for fixed in fixed_list:
+            for action in range(len(fixed_action_space)):
+                self.akey[idx] = ('fixed', fixed[0], action)
+                idx += 1
+        for movable in movable_list:
+            for action in range(len(movable_action_space)):
+                self.akey[idx] = ('movable', movable[0], action)
+                idx += 1
+        self.n_actions = idx-1
 
         self.ing_skey = {'loc': 0, 'washed': 1, 'sliced': 2}
         self.fix_skey = {'activated': 0}
@@ -48,20 +67,6 @@ class KitchenEnv():
         self.init_state = add_class("ingredient", ingredient_list) \
                           + add_class("fixed", fixed_list) + add_class("movable", movable_list)
 
-    # @staticmethod
-    # def list_to_tuple(ingredient_list, fixed_list, movable_list):
-        # state = tuple()
-        #
-        # for ingredient in ingredient_list:
-        #     state += (('ingredient', ingredient[0], tuple(ingredient[1])),) ###
-        # for fixed in fixed_list:
-        #     state += (('fixed', fixed[0], tuple(fixed[1])),)
-        # for movable in movable_list:
-        #     state += (('movable', movable[0], tuple(movable[1])),)
-        #
-        # return state
-
-    def list_to_tuple(ingredient_list, fixed_list, movable_list):
 
     def reset(self):
         self.state = self.init_state
@@ -77,7 +82,7 @@ class KitchenEnv():
         next_state = self.state
 
         # get next state from current state and selected action
-        (act_class, act_obj, act_num) = action
+        (act_class, act_obj, act_num) = self.akey[action]
         act_objX = self.obj_idx[act_obj]
         if act_class == 'ingredient':
             if act_num < self.Nloc:
@@ -108,9 +113,11 @@ class KitchenEnv():
 
         return next_state, reward, done
 
-    def render(self):
-        print(self.state)
+    def render(self, episode):
+        print(episode, self.state)
 
+
+# noinspection PyInterpreter
 class QLearningAgent:
     def __init__(self, actions):
         # 행동 = [0, 1, 2, 3] 순서대로 상, 하, 좌, 우
@@ -155,29 +162,29 @@ if __name__ == "__main__":
     env = KitchenEnv()
     agent = QLearningAgent(actions=list(range(env.n_actions)))
 
-    state = env.reset()                     # ((class, object, (object_states)), ...)
-    # action = ('ingredient', 'apple1', 2)    # (class, object, action[int])
-    action = agent.get_action(env.list_to_tuple(state))
-    next_state, reward, done = env.step(action)
+    # state = env.reset()                     # ((class, object, (object_states)), ...)
+    # action = ('ingredient', 'apple1', 2)  # (class, object, action[int])
+    # action = agent.get_action(state_list_to_tuple(state))
+    # next_state, reward, done = env.step(action)
     ##
 
     #
-    # for episode in range(1000):
-    #     state = env.reset()
-    #
-    #     while True:
-    #         env.render()
-    #
-    #         # 현재 상태에 대한 행동 선택
-    #         action = agent.get_action(str(state))
-    #         # 행동을 취한 후 다음 상태, 보상 에피소드의 종료여부를 받아옴
-    #         next_state, reward, done = env.step(action)
-    #
-    #         # <s,a,r,s'>로 큐함수를 업데이트
-    #         agent.learn(str(state), action, reward, str(next_state))
-    #         state = next_state
-    #         # 모든 큐함수를 화면에 표시
-    #         env.print_value_all(agent.q_table)
-    #
-    #         if done:
-    #             break
+    for episode in range(1000):
+        state = env.reset()
+
+        while True:
+            env.render(episode)
+
+            # 현재 상태에 대한 행동 선택
+            action = agent.get_action(state_list_to_tuple(state))
+            # 행동을 취한 후 다음 상태, 보상 에피소드의 종료여부를 받아옴
+            next_state, reward, done = env.step(action)
+
+            # <s,a,r,s'>로 큐함수를 업데이트
+            agent.learn(state_list_to_tuple(state), action, reward, state_list_to_tuple(next_state))
+            state = next_state
+            # 모든 큐함수를 화면에 표시
+            # env.print_value_all(agent.q_table)
+
+            if done:
+                break
