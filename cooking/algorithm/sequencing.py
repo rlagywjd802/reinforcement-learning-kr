@@ -7,7 +7,6 @@ def main():
     goal2 = ['ingredient', 'apple1', 'sliced', True]
     goal3 = ['movable', 'plate1', 'on', 'apple1']
     goal_list = [goal1, goal2, goal3]
-    # goal_list = [goal3]
     env_list = []
     agent_list = []
 

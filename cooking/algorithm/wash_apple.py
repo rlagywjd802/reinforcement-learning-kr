@@ -43,7 +43,7 @@ def main():
     env = KitchenEnv(goal, ingredient, fixed, movable, Nloc)
     agent = QLearningAgent(actions=list(range(env.n_actions)))
 
-    repeat_num = 1
+    repeat_num = 10
     train_episode = 50
 
     for num in range(repeat_num):
@@ -93,8 +93,8 @@ def main():
             print("state={}, action={}".format(test_states[t], test_actions[t]))
         print("test reward: {}, test step: {}".format(test_reward, test_step))
 
-    save_qtable("data/wash_apple_q.pickle", agent.q_table)
-    load_qtable("data/wash_apple_q.pickle")
+    save_qtable("data/wash_apple1_q.pickle", agent.q_table)
+    load_qtable("data/wash_apple1_q.pickle")
 
 if __name__ == "__main__":
     main()

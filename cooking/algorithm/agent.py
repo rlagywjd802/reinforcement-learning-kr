@@ -3,13 +3,27 @@ import random
 from collections import defaultdict
 
 class QLearningAgent:
-    def __init__(self, actions):
+    def __init__(self, actions, q_table=None):
         # 행동 = [0, 1, 2, 3] 순서대로 상, 하, 좌, 우
         self.actions = actions
         self.learning_rate = 0.01
         self.discount_factor = 0.9
         self.epsilon = 0.9
-        self.q_table = defaultdict(lambda: [0.0] * len(actions))  ### SxA(WxHxA)
+        if q_table is None:
+            self.q_table = defaultdict(lambda: [0.0] * len(actions))  ### SxA(WxHxA)
+        else:
+            self.q_table = self.add_object(q_table, len(actions))
+
+    def add_object(self, qtable, n_actions):
+        # q_added = defaultdict(lambda: [0.0] * len(n_actions))
+        apple1_action_len = 11
+        q_added = dict()
+        for state, qval in qtable.items():
+            # s5 == s1
+            state += ('ingredient', 'apple2', state[0][2])
+            qval.append(qval[:apple1_action_len])
+            # q_added[state] = apple1
+
 
     def set_epsilon(self, epsilon):
         self.epsilon = epsilon
